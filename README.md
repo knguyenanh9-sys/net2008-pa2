@@ -1,1 +1,2 @@
-# net2008-pa2
+#Khoa Nguyen, #ID: 041238009
+python pa2.py DEVICES.xml POLICY.yaml
