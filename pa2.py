@@ -74,7 +74,7 @@ def parse_policy(path):
   if policy is None:
     policy = {}
   if isinstance(policy, dict) is False:
-    raise InputFileError(f"Policy is not a dict")
+    raise InputFileError(f"{path} Policy is not a dict")
   return policy
 
 def str_to_num(os_str):
@@ -137,7 +137,7 @@ def interface_count(devices):
         interface_counter["other"] += 1
   return interface_counter
 
-def make_audit(site, devices, skipped, policy, dev_os, pol_os):
+def make_audit(site, devices, skipped, policy):
   """Build the audit"""
   roles = role_count(devices)
   interface_status = interface_count(devices)
