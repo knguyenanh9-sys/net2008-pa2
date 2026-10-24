@@ -77,6 +77,20 @@ def parse_policy(path):
     raise InputFileError(f"Policy is not a dict")
   return policy
 
+def policy_check(device, policy):
+  """Compare the device to the policy"""
+  violations = []
+  if "min_os" in policy:
+    if device.role not in policy["min_os"]:
+      violations.append({"device": device.id, "type": "unknown_role", "role": device.role})
+  if device.has_owner() is False and policy.get("require_owner"):
+    violations.append({"device": device.id, "type": "missing_owner"})
+  if "max_down_interfaces" in policy:
+    if device.down_count() > policy.get("max_down_interfaces"):
+      violations.append({"device": device.id, "type": "too_many_down", "down": device.down_count()})
+  return violations
+    
+
 
 #Functions used for making and writing the audit------------------------------------------------------------------------------------
 def role_count(devices):
