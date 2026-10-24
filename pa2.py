@@ -62,6 +62,21 @@ def parse_xml(path):
     devices.append(Device(id, role, os, owner, interfaces))
   return devices, skipped_devices, site
 
+def parse_policy(path):
+  """Read and load the yaml file, similar to parse_xml"""
+  try:
+    with open(path, encoding= "utf-8") as f:
+      policy = yaml.safe_load(f)
+  except FileNotFoundError:
+    raise InputFileError(f"{path} File not found")
+  except yaml.YAMLError:
+    raise InputFileError(f"{path} File is not a valid YAML file")
+  if policy is None:
+    policy = {}
+  if isinstance(policy, dict) is False:
+    raise InputFileError(f"Policy is not a dict")
+  return policy
+
 
 #Functions used for making and writing the audit------------------------------------------------------------------------------------
 def role_count(devices):
