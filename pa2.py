@@ -116,11 +116,20 @@ def interface_count(devices):
         interface_counter["other"] += 1
   return interface_counter
 
-def make_audit(site, devices, skipped):
+def make_audit(site, devices, skipped, policy):
   """Build the audit"""
   roles = role_count(devices)
   interface_status = interface_count(devices)
-  audit = {"site": site, "total_devices": len(devices), "skipped_devices": skipped, "roles": roles, "interfaces": interface_status}
+  violations = []
+  compliant = []
+  for d in devices:
+    check = policy_check(d, policy)
+    if len(check) == 0:
+      compliant.append(d.id)
+    else:
+      violations.extend(check)
+  compliant = sorted(compliant)
+  audit = {"site": site, "total_devices": len(devices), "skipped_devices": skipped, "roles": roles, "interfaces": interface_status, "violations": violations, "compliant": compliant}
   return audit
 
 def write_audit(audit):
