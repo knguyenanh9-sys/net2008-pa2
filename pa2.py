@@ -4,6 +4,7 @@ import json
 import xml.etree.ElementTree as ET
 import yaml
 
+
 class Device:
   """Class containing information about a device"""
   def __init__(self, id, role, os, owner, interfaces):
@@ -93,8 +94,7 @@ def os_comp(dev_ver, pol_ver):
     os1.append(0)
   while len(os2) < len(os1):
     os2.append(0)
-  if os1 < os2:
-    return True
+  return os1 < os2
 
 def policy_check(device, policy):
   """Compare the device to the policy"""
@@ -159,3 +159,23 @@ def write_audit(audit):
   with open("audit.json", "w", encoding= "utf-8") as f:
     json.dump(audit, f, indent=2)
 #-----------------------------------------------------------------------------------------------------------------------------
+def main():
+  """Run the audit"""
+  if len(sys.argv) != 3:
+    print ("usage: python pa2.py DEVICES.xml POLICY.yaml")
+    sys.exit(2)
+  xml_file = sys.argv[1]
+  yaml_file = sys.argv[2]
+  try:
+    devices, skipped, site = parse_xml(xml_file)
+    policy = parse_policy(yaml_file)
+    audit = make_audit(site, devices, skipped, policy)
+    write_audit(audit)
+  except InputFileError as e:
+    print (e)
+    sys.exit(1)
+  print (audit["total_devices"])
+  print (audit["skipped_devices"])
+  print (audit["violations"])
+if __name__=="__main__":
+  main()
