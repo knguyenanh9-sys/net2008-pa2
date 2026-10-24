@@ -34,7 +34,7 @@ class Device:
 class InputFileError(Exception):
   """Custom exception for input file error"""
 
-def parse(path):
+def parse_xml(path):
   """Read and load the xml file, then parse the data into a list of Device objects, return the number of skipped devices and the site name"""
   try:
     parsed = ET.parse(path)
@@ -62,3 +62,40 @@ def parse(path):
     devices.append(Device(id, role, os, owner, interfaces))
   return devices, skipped_devices, site
 
+
+#Functions used for making and writing the audit------------------------------------------------------------------------------------
+def role_count(devices):
+  """Count how many devices are in each role"""
+  role_counter = {}
+  for d in devices:
+    if d.role in role_counter:
+      role_counter[d.role] += 1
+    else:
+      role_counter[d.role] = 1
+  return role_counter
+
+def interface_count(devices):
+  """Count the status of interfaces"""
+  interface_counter = {"up": 0, "down": 0, "other": 0}
+  for d in devices:
+    for i in d.interfaces:
+      if i == "up":
+        interface_counter["up"] += 1
+      elif i == "down":
+        interface_counter["down"] += 1
+      else:
+        interface_counter["other"] += 1
+  return interface_counter
+
+def make_audit(site, devices, skipped):
+  """Build the audit"""
+  roles = role_count(devices)
+  interface_status = interface_count(devices)
+  audit = {"site": site, "total_devices": len(devices), "skipped_devices": skipped, "roles": roles, "interfaces": interface_status}
+  return audit
+
+def write_audit(audit):
+  """Write the audit"""
+  with open("audit.json", "w", encoding= "utf-8") as f:
+    json.dump(audit, f, indent=2)
+#-----------------------------------------------------------------------------------------------------------------------------
