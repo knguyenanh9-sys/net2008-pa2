@@ -77,20 +77,41 @@ def parse_policy(path):
     raise InputFileError(f"Policy is not a dict")
   return policy
 
+def str_to_num(os_str):
+  """Convert os string to number for comparison"""
+  num = os_str.split(".")
+  int_num = []
+  for d in num:
+    int_num.append(int(d))
+  return int_num
+
+def os_comp(dev_ver, pol_ver):
+  """Compare the os version"""
+  os1 = str_to_num(dev_ver)
+  os2 = str_to_num(pol_ver)
+  while len(os1) < len(os2):
+    os1.append(0)
+  while len(os2) < len(os1):
+    os2.append(0)
+  if os1 < os2:
+    return True
+
 def policy_check(device, policy):
   """Compare the device to the policy"""
   violations = []
   if "min_os" in policy:
     if device.role not in policy["min_os"]:
       violations.append({"device": device.id, "type": "unknown_role", "role": device.role})
+    if device.role in policy["min_os"]:
+      os = os_comp(device.os, policy["min_os"][device.role])
+      if os is True:
+        violations.append({"device": device.id, "type": "os_outdated", "found": device.os, "required": policy["min_os"][device.role]})
   if device.has_owner() is False and policy.get("require_owner"):
     violations.append({"device": device.id, "type": "missing_owner"})
   if "max_down_interfaces" in policy:
     if device.down_count() > policy.get("max_down_interfaces"):
       violations.append({"device": device.id, "type": "too_many_down", "down": device.down_count()})
   return violations
-    
-
 
 #Functions used for making and writing the audit------------------------------------------------------------------------------------
 def role_count(devices):
@@ -116,7 +137,7 @@ def interface_count(devices):
         interface_counter["other"] += 1
   return interface_counter
 
-def make_audit(site, devices, skipped, policy):
+def make_audit(site, devices, skipped, policy, dev_os, pol_os):
   """Build the audit"""
   roles = role_count(devices)
   interface_status = interface_count(devices)
@@ -128,6 +149,7 @@ def make_audit(site, devices, skipped, policy):
       compliant.append(d.id)
     else:
       violations.extend(check)
+
   compliant = sorted(compliant)
   audit = {"site": site, "total_devices": len(devices), "skipped_devices": skipped, "roles": roles, "interfaces": interface_status, "violations": violations, "compliant": compliant}
   return audit
